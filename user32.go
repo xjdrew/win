@@ -1533,7 +1533,11 @@ var (
 	getFocus                   uintptr
 	getForegroundWindow        uintptr
 	getKeyState                uintptr
+	getSystemMenu              uintptr
 	getMenuInfo                uintptr
+	getMenuItemCount           uintptr
+	getMenuItemID              uintptr
+	deleteMenu                 uintptr
 	getMessage                 uintptr
 	getMonitorInfo             uintptr
 	getParent                  uintptr
@@ -1569,6 +1573,7 @@ var (
 	peekMessage                uintptr
 	postMessage                uintptr
 	postQuitMessage            uintptr
+	getClassInfoEx             uintptr
 	registerClassEx            uintptr
 	registerRawInputDevices    uintptr
 	registerWindowMessage      uintptr
@@ -1593,6 +1598,7 @@ var (
 	setRect                    uintptr
 	setScrollInfo              uintptr
 	setTimer                   uintptr
+	setWindowText              uintptr
 	setWindowLong              uintptr
 	setWindowLongPtr           uintptr
 	setWindowPlacement         uintptr
@@ -1652,7 +1658,11 @@ func init() {
 	getFocus = MustGetProcAddress(libuser32, "GetFocus")
 	getForegroundWindow = MustGetProcAddress(libuser32, "GetForegroundWindow")
 	getKeyState = MustGetProcAddress(libuser32, "GetKeyState")
+	getSystemMenu = MustGetProcAddress(libuser32, "GetSystemMenu")
 	getMenuInfo = MustGetProcAddress(libuser32, "GetMenuInfo")
+	getMenuItemCount = MustGetProcAddress(libuser32, "GetMenuItemCount")
+	getMenuItemID = MustGetProcAddress(libuser32, "GetMenuItemID")
+	deleteMenu = MustGetProcAddress(libuser32, "DeleteMenu")
 	getMessage = MustGetProcAddress(libuser32, "GetMessageW")
 	getMonitorInfo = MustGetProcAddress(libuser32, "GetMonitorInfoW")
 	getParent = MustGetProcAddress(libuser32, "GetParent")
@@ -1693,6 +1703,7 @@ func init() {
 	peekMessage = MustGetProcAddress(libuser32, "PeekMessageW")
 	postMessage = MustGetProcAddress(libuser32, "PostMessageW")
 	postQuitMessage = MustGetProcAddress(libuser32, "PostQuitMessage")
+	getClassInfoEx = MustGetProcAddress(libuser32, "GetClassInfoExW")
 	registerClassEx = MustGetProcAddress(libuser32, "RegisterClassExW")
 	registerRawInputDevices = MustGetProcAddress(libuser32, "RegisterRawInputDevices")
 	registerWindowMessage = MustGetProcAddress(libuser32, "RegisterWindowMessageW")
@@ -1717,6 +1728,7 @@ func init() {
 	setParent = MustGetProcAddress(libuser32, "SetParent")
 	setScrollInfo = MustGetProcAddress(libuser32, "SetScrollInfo")
 	setTimer = MustGetProcAddress(libuser32, "SetTimer")
+	setWindowText = MustGetProcAddress(libuser32, "SetWindowTextW")
 	setWindowLong = MustGetProcAddress(libuser32, "SetWindowLongW")
 	// On 32 bit SetWindowLongPtrW is not available
 	if is64bit {
@@ -2135,11 +2147,46 @@ func GetKeyState(nVirtKey int32) int16 {
 	return int16(ret)
 }
 
+func GetSystemMenu(hWnd HWND, bRevert bool) HMENU {
+	ret, _, _ := syscall.Syscall(getSystemMenu, 2,
+		uintptr(hWnd),
+		uintptr(BoolToBOOL(bRevert)),
+		0)
+	return HMENU(ret)
+}
+
 func GetMenuInfo(hmenu HMENU, lpcmi *MENUINFO) bool {
 	ret, _, _ := syscall.Syscall(getMenuInfo, 2,
 		uintptr(hmenu),
 		uintptr(unsafe.Pointer(lpcmi)),
 		0)
+
+	return ret != 0
+}
+
+func GetMenuItemCount(hmenu HMENU) int32 {
+	ret, _, _ := syscall.Syscall(getMenuItemCount, 1,
+		uintptr(hmenu),
+		0,
+		0)
+
+	return int32(ret)
+
+}
+func GetMenuItemID(hmenu HMENU, nPos int32) uint32 {
+	ret, _, _ := syscall.Syscall(getMenuItemID, 2,
+		uintptr(hmenu),
+		uintptr(nPos),
+		0)
+
+	return uint32(ret)
+}
+
+func DeleteMenu(hmenu HMENU, uPosition uint32, uFlags uint32) bool {
+	ret, _, _ := syscall.Syscall(deleteMenu, 3,
+		uintptr(hmenu),
+		uintptr(uPosition),
+		uintptr(uFlags))
 
 	return ret != 0
 }
@@ -2498,6 +2545,15 @@ func PostQuitMessage(exitCode int32) {
 		0)
 }
 
+func GetClassInfoEx(hinst HINSTANCE, name *uint16, windowClass *WNDCLASSEX) bool {
+	ret, _, _ := syscall.Syscall(getClassInfoEx, 3,
+		uintptr(hinst),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(windowClass)))
+
+	return ret != 0
+}
+
 func RegisterClassEx(windowClass *WNDCLASSEX) ATOM {
 	ret, _, _ := syscall.Syscall(registerClassEx, 1,
 		uintptr(unsafe.Pointer(windowClass)),
@@ -2731,6 +2787,15 @@ func SetTimer(hWnd HWND, nIDEvent uintptr, uElapse uint32, lpTimerFunc uintptr) 
 		0)
 
 	return ret
+}
+
+func SetWindowText(hWnd HWND, text *uint16) bool {
+	ret, _, _ := syscall.Syscall(setWindowText, 2,
+		uintptr(hWnd),
+		uintptr(unsafe.Pointer(text)),
+		0)
+
+	return ret != 0
 }
 
 func SetWindowLong(hWnd HWND, index, value int32) int32 {
