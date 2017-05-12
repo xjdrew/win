@@ -1480,6 +1480,21 @@ type SCROLLINFO struct {
 	NTrackPos int32
 }
 
+type WINDOWPOS struct {
+	Hwnd            HWND
+	HwndInsertAfter HWND
+	X               int32
+	Y               int32
+	CX              int32
+	CY              int32
+	Flags           uint32
+}
+
+type NCCALCSIZE_PARAMS struct {
+	Rgrc  [3]RECT
+	Lppos *WINDOWPOS
+}
+
 func GET_X_LPARAM(lp uintptr) int32 {
 	return int32(int16(LOWORD(uint32(lp))))
 }
