@@ -308,6 +308,21 @@ type FWPM_LAYER0 struct {
 	LayerId            uint16
 }
 
+type FWPM_CALLOUT0 struct {
+	CalloutKey      GUID
+	DisplayData     FWPM_DISPLAY_DATA0
+	Flags           uint32
+	ProviderKey     *GUID
+	ProviderData    FWP_BYTE_BLOB
+	ApplicableLayer GUID
+	CalloutId       uint32
+}
+
+type FWPM_CALLOUT_ENUM_TEMPLATE0 struct {
+	ProviderKey *GUID
+	LayerKey    GUID
+}
+
 var (
 	// Library
 	libfwpuclnt uintptr
@@ -374,6 +389,16 @@ var (
 	fwpmLayerEnum0              uintptr
 	fwpmLayerGetById0           uintptr
 	fwpmLayerGetByKey0          uintptr
+
+	// Callout Management
+	fwpmCalloutAdd0               uintptr
+	fwpmCalloutCreateEnumHandle0  uintptr
+	fwpmCalloutDeleteById0        uintptr
+	fwpmCalloutDeleteByKey0       uintptr
+	fwpmCalloutDestroyEnumHandle0 uintptr
+	fwpmCalloutEnum0              uintptr
+	fwpmCalloutGetById0           uintptr
+	fwpmCalloutGetByKey0          uintptr
 
 	// Transaction Management
 	fwpmTransactionAbort0  uintptr
@@ -447,6 +472,16 @@ func init() {
 	fwpmLayerEnum0 = MustGetProcAddress(libfwpuclnt, "FwpmLayerEnum0")
 	fwpmLayerGetById0 = MustGetProcAddress(libfwpuclnt, "FwpmLayerGetById0")
 	fwpmLayerGetByKey0 = MustGetProcAddress(libfwpuclnt, "FwpmLayerGetByKey0")
+
+	// Callout Management
+	fwpmCalloutAdd0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutAdd0")
+	fwpmCalloutCreateEnumHandle0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutCreateEnumHandle0")
+	fwpmCalloutDeleteById0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutDeleteById0")
+	fwpmCalloutDeleteByKey0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutDeleteByKey0")
+	fwpmCalloutDestroyEnumHandle0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutDestroyEnumHandle0")
+	fwpmCalloutEnum0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutEnum0")
+	fwpmCalloutGetById0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutGetById0")
+	fwpmCalloutGetByKey0 = MustGetProcAddress(libfwpuclnt, "FwpmCalloutGetByKey0")
 
 	// Transaction Management
 	fwpmTransactionAbort0 = MustGetProcAddress(libfwpuclnt, "FwpmTransactionAbort0")
@@ -754,6 +789,84 @@ func FwpmLayerGetByKey0(engineHandle HANDLE, key *GUID, layer **FWPM_LAYER0) uin
 		uintptr(engineHandle),
 		uintptr(unsafe.Pointer(key)),
 		uintptr(unsafe.Pointer(layer)),
+	)
+	return uint32(ret)
+}
+
+// Callout Management
+func FwpmCalloutAdd0(engineHandle HANDLE, callout *FWPM_CALLOUT0, sd uintptr, id *uint32) uint32 {
+	ret, _, _ := syscall.Syscall6(fwpmCalloutAdd0, 4,
+		uintptr(engineHandle),
+		uintptr(unsafe.Pointer(callout)),
+		sd,
+		uintptr(unsafe.Pointer(id)),
+		0,
+		0,
+	)
+	return uint32(ret)
+}
+func FwpmCalloutCreateEnumHandle0(engineHandle HANDLE, enumTemplate *FWPM_CALLOUT_ENUM_TEMPLATE0, enumHandle *HANDLE) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutCreateEnumHandle0, 3,
+		uintptr(engineHandle),
+		uintptr(unsafe.Pointer(enumTemplate)),
+		uintptr(unsafe.Pointer(enumHandle)),
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutDeleteById0(engineHandle HANDLE, id uint32) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutDeleteById0, 2,
+		uintptr(engineHandle),
+		uintptr(id),
+		0,
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutDeleteByKey0(engineHandle HANDLE, key *GUID) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutDeleteById0, 2,
+		uintptr(engineHandle),
+		uintptr(unsafe.Pointer(key)),
+		0,
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutDestroyEnumHandle0(engineHandle HANDLE, enumHandle HANDLE) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutDestroyEnumHandle0, 2,
+		uintptr(engineHandle),
+		uintptr(enumHandle),
+		0,
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutEnum0(engineHandle HANDLE, enumHandle HANDLE, numEntriesRequested uint32, entries ***FWPM_CALLOUT0, numEntriesReturned *uint32) uint32 {
+	ret, _, _ := syscall.Syscall6(fwpmCalloutEnum0, 5,
+		uintptr(engineHandle),
+		uintptr(enumHandle),
+		uintptr(numEntriesRequested),
+		uintptr(unsafe.Pointer(entries)),
+		uintptr(unsafe.Pointer(numEntriesReturned)),
+		0,
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutGetById0(engineHandle HANDLE, id uint32, callout **FWPM_CALLOUT0) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutGetById0, 3,
+		uintptr(engineHandle),
+		uintptr(id),
+		uintptr(unsafe.Pointer(callout)),
+	)
+	return uint32(ret)
+}
+
+func FwpmCalloutGetByKey0(engineHandle HANDLE, key *GUID, callout **FWPM_CALLOUT0) uint32 {
+	ret, _, _ := syscall.Syscall(fwpmCalloutGetByKey0, 3,
+		uintptr(engineHandle),
+		uintptr(unsafe.Pointer(key)),
+		uintptr(unsafe.Pointer(callout)),
 	)
 	return uint32(ret)
 }
